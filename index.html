@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Fixify Ticket Dispenser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="slot" aria-hidden="true"></div>
+  <main id="stage" aria-label="IT ticket dispenser. Pull the hanging ticket down to tear one off."></main>
+
+  <p id="hint" class="hint" aria-live="polite">Pull a ticket</p>
+
+  <footer class="hud" aria-live="polite">
+    <span>Open <b id="count-open">0</b></span>
+    <span>Working <b id="count-working">0</b></span>
+    <span>Fixed <b id="count-fixed">0</b></span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

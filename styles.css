@@ -1,0 +1,226 @@
+:root {
+  --bg: #050707;
+  --paper: #9bcfe0;
+  --ink: #000;
+  --muted: #5b6668;
+  --font: "PP Neue Montreal", "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: var(--font);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+/* ---------- Ticket (all inner sizes are Figma design units; JS scales it) ---------- */
+
+.ticket {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 281px;
+  height: 646px;
+  transform-origin: 0 0;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.ticket.is-free {
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55));
+}
+
+.paper {
+  position: absolute;
+  inset: 0;
+  /* clip-path is set from JS so the hit area matches the ticket outline */
+  transition: filter 0.4s ease;
+}
+
+.ticket.is-grabbable .paper { pointer-events: auto; cursor: grab; }
+.ticket.is-held .paper { cursor: grabbing; }
+
+.paper svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.paper .fill { fill: var(--paper); }
+.paper .mark { fill: var(--ink); }
+.paper .cut { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+
+.rail {
+  position: absolute;
+  top: 0;
+  width: 19px;
+  height: 442px;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 19px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rail span {
+  display: block;
+  writing-mode: vertical-rl;
+}
+
+/* Left rail reads bottom → top, right rail top → bottom (as in the design) */
+.rail-l { left: 5px; }
+.rail-l span { transform: rotate(180deg); margin-top: -40px; }
+.rail-r { left: 257px; }
+.rail-r span { margin-top: -26px; }
+
+.num {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 261px;
+  text-align: center;
+  font-size: 60.13px;
+  line-height: 72px;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.num b { font-weight: 700; }
+
+.desc {
+  position: absolute;
+  left: 50%;
+  top: 337px;
+  width: 151px;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 24px;
+  line-height: 24px;
+}
+
+/* Rubber stamp shown while working / once fixed */
+.stamp {
+  position: absolute;
+  left: 50%;
+  top: 404px;
+  min-width: 150px;
+  padding: 6px 12px 5px;
+  border: 3px solid var(--ink);
+  border-radius: 6px;
+  transform: translateX(-50%) rotate(-8deg) scale(1.6);
+  opacity: 0;
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  transition: transform 0.25s cubic-bezier(.2, 1.6, .4, 1), opacity 0.15s ease;
+}
+
+.stamp small {
+  display: block;
+  margin-top: 3px;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ticket[data-status="working"] .stamp,
+.ticket[data-status="fixed"] .stamp {
+  opacity: 1;
+  transform: translateX(-50%) rotate(-8deg) scale(1);
+}
+
+.ticket[data-status="fixed"] .paper { filter: saturate(0.25) brightness(0.62); }
+
+/* Moving light / shade so tilted paper reads as 3D */
+.sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Dispenser slot the strip emerges from */
+.slot {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 2;
+  width: calc(281px * var(--s, 1) + 56px);
+  height: calc(26px * var(--s, 1) + 6px);
+  transform: translateX(-50%);
+  border-radius: 0 0 10px 10px;
+  background: linear-gradient(#000 0%, #121717 70%, #2a3233 100%);
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    0 10px 24px rgba(0, 0, 0, 0.9),
+    0 2px 0 rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.slot::after {
+  /* the dark mouth the paper comes out of */
+  content: "";
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 5px;
+  height: 4px;
+  border-radius: 2px;
+  background: #000;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- HUD ---------- */
+
+.hint {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: max(56px, env(safe-area-inset-bottom));
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.hint.is-hidden { opacity: 0; }
+
+.hud {
+  position: fixed;
+  left: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 18px;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.hud b {
+  color: var(--paper);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
