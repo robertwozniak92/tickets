@@ -5,7 +5,7 @@ A small interactive page that works like a deli-counter ticket machine, but for 
 - **Pull** the hanging ticket down. The strip comes out of the slot and leans toward you.
 - Keep pulling and it **tears** along the V-shaped perforation. The ticket stays in your hand, the strip snaps back up, and the machine feeds out the next one.
 - **Drag** tickets around like paper on a desk. The spot you're holding lifts toward you and the rest trails behind and tilts with momentum. You can also toss them.
-- **Tap** a ticket to start working on it (it gets a stamp with a running timer). Tap it again to mark it fixed.
+- **Tap** a ticket to start working on it (it gets a stamp with a running timer). Tap it again to mark it fixed. After a second it flies onto the done pile in the bottom-right corner.
 
 There are no dependencies and no build step. Open `index.html` directly, or serve the folder:
 

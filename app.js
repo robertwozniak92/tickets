@@ -42,6 +42,10 @@
   const LIFT_Z = 60;                    // px a held ticket rises toward the viewer
   const MAX_TILT = 0.38;                // rad, 3D paper tilt clamp
   const MAX_FREE = 14;
+  const PILE_MAX = 8;                   // fixed tickets kept visible on the done pile
+  const PILE_SCALE = 0.42;              // size of a filed ticket relative to a live one
+  const FILE_DELAY = 1000;              // ms to admire the FIXED stamp before it's filed
+  const FILE_TIME = 650;                // ms flight to the pile
   const SUBSTEPS = 6;
 
   // ---------- State ----------
@@ -57,10 +61,12 @@
   const pointer = { id: null, x: 0, y: 0, vx: 0, vy: 0, t: 0, downX: 0, downY: 0, downT: 0 };
   const strip = { y: 0, v: 0, a: 0, va: 0, tilt: 0, tickets: [], drag: null };
   const free = [];
+  const pile = [];          // fixed tickets, oldest first
+  let fixedTotal = 0;
   let held = null;           // free ticket currently in hand
   let nextNum = 970;
   let issueIdx = 0;
-  let zTop = 1;
+  let zTop = 100;           // free tickets stack above the pile (z 1..PILE_MAX)
   let tornCount = 0;
   let startedWork = false;
   let lastInteraction = performance.now();
@@ -342,6 +348,8 @@
       const secs = Math.floor((performance.now() - t.startedAt) / 1000);
       t.stampLabel.textContent = "Fixed";
       t.stampTime.textContent = `in ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+      t.fileAt = performance.now() + FILE_DELAY;
+      fixedTotal++;
     }
     t.el.dataset.status = t.status;
     // a little hop so the stamp feels physical
@@ -361,9 +369,51 @@
     }
   }
 
+  // ---------- Done pile ----------
+  function fileTicket(t, now) {
+    free.splice(free.indexOf(t), 1);
+    t.el.classList.remove("is-grabbable", "is-held");
+    t.anim = { t0: now, x: t.x, y: t.y, a: t.a, tx: t.tx, ty: t.ty, z: t.z };
+    // each filed ticket lands slightly askew, like a real stack of stubs
+    t.pileA = -0.06 + (Math.random() - 0.5) * 0.22;
+    t.pileDx = (Math.random() - 0.5) * 10;
+    pile.push(t);
+    while (pile.length > PILE_MAX) {
+      const old = pile.shift();
+      old.el.style.transition = "opacity .4s ease";
+      old.el.style.opacity = "0";
+      setTimeout(() => old.el.remove(), 450);
+    }
+    pile.forEach((p, i) => { p.el.style.zIndex = String(i + 1); });
+  }
+
+  function renderPile(now) {
+    const s = view.s, k1 = PILE_SCALE;
+    pile.forEach((t, i) => {
+      const tx = view.W - 28 - (TW / 2) * s * k1 + t.pileDx;
+      const ty = view.H - 22 - (646 - COM.y) * s * k1 - i * 4;
+      const p = Math.min(1, (now - t.anim.t0) / FILE_TIME);
+      const e = 1 - Math.pow(1 - p, 3);
+      let from = t.anim.a;
+      while (from - t.pileA > Math.PI) from -= 2 * Math.PI;
+      while (from - t.pileA < -Math.PI) from += 2 * Math.PI;
+      const x = t.anim.x + (tx - t.anim.x) * e;
+      const y = t.anim.y + (ty - t.anim.y) * e;
+      const a = from + (t.pileA - from) * e;
+      const k = 1 + (k1 - 1) * e;
+      const z = t.anim.z * (1 - e) + Math.sin(Math.PI * p) * 70; // arcs up toward you mid-flight
+      const rx = t.anim.tx * (1 - e), ry = t.anim.ty * (1 - e);
+      t.el.style.transform =
+        `translate3d(${x}px,${y}px,${z}px) rotate(${a}rad) rotateX(${rx}rad) rotateY(${ry}rad)` +
+        ` scale(${s * k}) translate(${-COM.x}px,${-COM.y}px)`;
+      if (p < 1) setSheen(t, rx, ry, 0);
+    });
+  }
+
   function updateCounts() {
     const c = { new: 0, working: 0, fixed: 0 };
-    free.forEach((t) => c[t.status]++);
+    free.forEach((t) => { if (t.status !== "fixed") c[t.status]++; });
+    c.fixed = fixedTotal;
     for (const k in c) counts[k].textContent = c[k];
   }
 
@@ -466,7 +516,11 @@
       stepStrip(h);
       for (const t of free) stepFree(t, h);
     }
+    for (const t of free.slice()) {
+      if (t.fileAt && now >= t.fileAt && t !== held) fileTicket(t, now);
+    }
     for (const t of free) { step3D(t, dt); renderFree(t); }
+    renderPile(now);
     renderStrip();
     requestAnimationFrame(frame);
   }
