@@ -43,6 +43,13 @@ html, body {
 
 .ticket.is-free {
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.28));
+  transition: filter 0.25s ease;
+}
+
+/* The ticket in your hand is lifted, so it casts a deeper shadow */
+.ticket.is-held {
+  filter: drop-shadow(0 22px 24px rgba(0, 0, 0, 0.6)) drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35));
+  transition: filter 0.25s ease;
 }
 
 .paper {
@@ -196,11 +203,15 @@ html, body {
   position: fixed;
   top: max(16px, env(safe-area-inset-top));
   right: 16px;
-  z-index: 3;
+  z-index: 50;
   display: flex;
   align-items: center;
   padding: 6px;
   border-radius: 999px;
+  /* own compositing layer so Safari never draws 3D tickets on top of it */
+  transform: translateZ(0);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -249,7 +260,10 @@ html, body {
   transition-delay: calc((7 - var(--i)) * 25ms);
 }
 
-.palette.is-open .swatches .swatch:hover { transform: scale(1.15); transition-delay: 0s; }
+@media (hover: hover) {
+  .palette.is-open .swatches .swatch:hover { transform: scale(1.15); transition-delay: 0s; }
+  .palette-toggle:hover { transform: scale(1.08); }
+}
 
 .swatch[aria-checked="true"] {
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--c);
@@ -264,17 +278,29 @@ html, body {
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px rgba(255, 255, 255, 0.25), inset 0 -2px 0 rgba(0, 0, 0, 0.18);
 }
 
-.palette-toggle:hover { transform: scale(1.08); }
-
 @media (max-width: 520px) {
   .palette {
     top: auto;
     right: auto;
     left: 50%;
     bottom: calc(max(16px, env(safe-area-inset-bottom)) + 30px);
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
   body .hint { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 76px); }
+}
+
+/* Finger-sized targets on touch screens */
+@media (pointer: coarse) {
+  .swatches { gap: 10px; }
+  .palette.is-open .swatches { max-width: 340px; }
+  .swatch { width: 30px; height: 30px; }
+  .palette-toggle { width: 36px; height: 36px; }
+  .swatch::before {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+  }
 }
 
 /* ---------- HUD ---------- */

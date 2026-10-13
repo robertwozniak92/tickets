@@ -578,7 +578,20 @@
   palette.addEventListener("pointerleave", (e) => {
     if (e.pointerType === "mouse" && canHover.matches) closeTimer = setTimeout(() => setPaletteOpen(false), 250);
   });
-  paletteToggle.addEventListener("click", () => setPaletteOpen(!palette.classList.contains("is-open")));
+  // Act on touch release straight away (iOS Safari can delay or swallow the
+  // synthetic click); mouse and keyboard still go through the normal click.
+  function onTap(el, fn) {
+    let handled = false;
+    el.addEventListener("pointerup", (e) => {
+      if (e.pointerType === "mouse") return;
+      e.preventDefault();
+      handled = true;
+      setTimeout(() => { handled = false; }, 600);
+      fn();
+    });
+    el.addEventListener("click", () => { if (!handled) fn(); });
+  }
+  onTap(paletteToggle, () => setPaletteOpen(!palette.classList.contains("is-open")));
   palette.addEventListener("focusout", (e) => { if (!palette.contains(e.relatedTarget)) setPaletteOpen(false); });
   palette.addEventListener("keydown", (e) => { if (e.key === "Escape") { setPaletteOpen(false); paletteToggle.focus(); } });
   document.addEventListener("pointerdown", (e) => { if (!palette.contains(e.target)) setPaletteOpen(false); });
@@ -593,9 +606,9 @@
     b.setAttribute("role", "radio");
     b.setAttribute("aria-label", p.name);
     b.title = p.name;
-    b.addEventListener("click", () => {
+    onTap(b, () => {
       setPaper(p.hex);
-      if (!canHover.matches) setTimeout(() => setPaletteOpen(false), 180);
+      if (!canHover.matches) setTimeout(() => setPaletteOpen(false), 220);
     });
     swatchBox.appendChild(b);
   });
