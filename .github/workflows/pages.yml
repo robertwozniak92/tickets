@@ -23,7 +23,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Collect site files
-        run: mkdir _site && cp index.html styles.css app.js _site/
+        run: |
+          mkdir _site && cp index.html styles.css app.js _site/
+          # Version the asset URLs so browsers (iOS Safari especially) never
+          # pair a fresh page with a stale cached stylesheet or script.
+          v="${GITHUB_SHA::7}"
+          sed -i -e "s|href=\"styles.css\"|href=\"styles.css?v=$v\"|" -e "s|src=\"app.js\"|src=\"app.js?v=$v\"|" _site/index.html
+          grep -q "styles.css?v=$v" _site/index.html && grep -q "app.js?v=$v" _site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
