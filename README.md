@@ -23,3 +23,7 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 
 - The design uses **PP Neue Montreal**. It's used if installed locally; otherwise the page falls back to Inter Tight from Google Fonts.
 - Tuning constants (tear distance, spring stiffness, lift height, tilt limits) are at the top of `app.js`.
+
+## Hosting
+
+Every push to `main` deploys the site to GitHub Pages through `.github/workflows/pages.yml`. To set it up the first time, open **Settings → Pages** and set **Source** to **GitHub Actions**. Free accounts can only use Pages on public repos.
