@@ -309,6 +309,25 @@ html, body {
   }
 }
 
+/* Phones: the colours drop down in a column under the dot */
+@media (max-width: 520px) {
+  .palette { flex-direction: column-reverse; }
+  .swatches {
+    flex-direction: column;
+    max-width: none;
+    max-height: 0;
+    padding: 0 4px;
+    transition: max-height 0.3s cubic-bezier(.2, .8, .2, 1), padding 0.3s ease;
+  }
+  .palette.is-open .swatches {
+    max-width: none;
+    max-height: 420px;
+    padding: 10px 4px 4px;
+  }
+  .swatches .swatch { transform: translateY(calc((var(--i) + 1) * -12px)) scale(0.4); }
+  .palette.is-open .swatches .swatch { transition-delay: calc(var(--i) * 25ms); }
+}
+
 /* ---------- HUD ---------- */
 
 .hint {
