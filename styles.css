@@ -188,7 +188,9 @@ html, body {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-/* ---------- Paper color picker ---------- */
+/* ---------- Paper color picker ----------
+   Collapsed to one dot in the current colour; the presets fan out of it
+   on hover (mouse) or on tap (touch). */
 
 .palette {
   position: fixed;
@@ -197,24 +199,33 @@ html, body {
   z-index: 3;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px 8px 14px;
+  padding: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
-.palette-label {
-  color: var(--muted);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.palette.is-open {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-.swatches { display: flex; gap: 8px; }
+.swatches {
+  display: flex;
+  gap: 8px;
+  max-width: 0;
+  padding: 4px 0;
+  overflow: hidden;
+  transition: max-width 0.3s cubic-bezier(.2, .8, .2, 1), padding 0.3s ease;
+}
+
+.palette.is-open .swatches {
+  max-width: 260px;
+  padding: 4px 10px 4px 4px;
+}
 
 .swatch {
   position: relative;
+  flex: none;
   width: 22px;
   height: 22px;
   padding: 0;
@@ -226,7 +237,19 @@ html, body {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.swatch:hover { transform: scale(1.12); }
+.swatches .swatch {
+  opacity: 0;
+  transform: translateX(calc((7 - var(--i)) * 12px)) scale(0.4);
+  transition: opacity 0.2s ease, transform 0.3s cubic-bezier(.2, 1.4, .4, 1), box-shadow 0.15s ease;
+}
+
+.palette.is-open .swatches .swatch {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc((7 - var(--i)) * 25ms);
+}
+
+.palette.is-open .swatches .swatch:hover { transform: scale(1.15); transition-delay: 0s; }
 
 .swatch[aria-checked="true"] {
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--c);
@@ -234,37 +257,24 @@ html, body {
 
 .swatch:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
-.swatch-custom {
-  background: conic-gradient(#f4b6c9, #f3e08a, #a8e0c0, #9bcfe0, #c8b8ec, #f4b6c9);
-  overflow: hidden;
+.palette-toggle {
+  --c: var(--paper);
+  width: 26px;
+  height: 26px;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px rgba(255, 255, 255, 0.25), inset 0 -2px 0 rgba(0, 0, 0, 0.18);
 }
 
-.swatch-custom.is-selected { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--c, #fff); }
-.swatch-custom:focus-within { outline: 2px solid #fff; outline-offset: 3px; }
-
-.swatch-custom input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
+.palette-toggle:hover { transform: scale(1.08); }
 
 @media (max-width: 520px) {
-  .palette-label { display: none; }
   .palette {
     top: auto;
     right: auto;
     left: 50%;
     bottom: calc(max(16px, env(safe-area-inset-bottom)) + 30px);
     transform: translateX(-50%);
-    gap: 6px;
-    padding: 6px 8px;
   }
   body .hint { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 76px); }
-  .swatches { gap: 6px; }
-  .swatch { width: 20px; height: 20px; }
 }
 
 /* ---------- HUD ---------- */

@@ -60,8 +60,9 @@
     { name: "Lilac", hex: "#c8b8ec" },
     { name: "White", hex: "#ecebe6" },
   ];
+  const palette = document.getElementById("palette");
   const swatchBox = document.getElementById("swatches");
-  const customInput = document.getElementById("custom-color");
+  const paletteToggle = document.getElementById("palette-toggle");
   const counts = {
     new: document.getElementById("count-open"),
     working: document.getElementById("count-working"),
@@ -553,31 +554,49 @@
   }
 
   function setPaper(hex, save = true) {
-    paperColor = hex.toLowerCase();
+    paperColor = hex;
     // Only tickets still in the machine change; torn-off ones keep their colour.
     strip.tickets.forEach((t) => applyPaper(t.el, paperColor));
     document.documentElement.style.setProperty("--paper", paperColor);
-    const preset = PAPERS.some((p) => p.hex === paperColor);
     swatchBox.querySelectorAll(".swatch").forEach((b) => {
-      b.setAttribute("aria-checked", String(b.dataset.hex === paperColor));
-      b.tabIndex = b.dataset.hex === paperColor || (!preset && b === swatchBox.firstChild) ? 0 : -1;
+      const on = b.dataset.hex === paperColor;
+      b.setAttribute("aria-checked", String(on));
+      b.tabIndex = on ? 0 : -1;
     });
-    customInput.parentElement.classList.toggle("is-selected", !preset);
-    customInput.parentElement.style.setProperty("--c", paperColor);
-    if (!preset) customInput.value = paperColor;
     if (save) { try { localStorage.setItem("fixify-paper", paperColor); } catch (e) { /* storage blocked */ } }
   }
 
-  PAPERS.forEach((p) => {
+  // Mouse users get the colours on hover; touch users tap the dot to open/close.
+  const canHover = window.matchMedia("(hover: hover) and (pointer: fine)");
+  let closeTimer = 0;
+  function setPaletteOpen(open) {
+    clearTimeout(closeTimer);
+    palette.classList.toggle("is-open", open);
+    paletteToggle.setAttribute("aria-expanded", String(open));
+  }
+  palette.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse" && canHover.matches) setPaletteOpen(true); });
+  palette.addEventListener("pointerleave", (e) => {
+    if (e.pointerType === "mouse" && canHover.matches) closeTimer = setTimeout(() => setPaletteOpen(false), 250);
+  });
+  paletteToggle.addEventListener("click", () => setPaletteOpen(!palette.classList.contains("is-open")));
+  palette.addEventListener("focusout", (e) => { if (!palette.contains(e.relatedTarget)) setPaletteOpen(false); });
+  palette.addEventListener("keydown", (e) => { if (e.key === "Escape") { setPaletteOpen(false); paletteToggle.focus(); } });
+  document.addEventListener("pointerdown", (e) => { if (!palette.contains(e.target)) setPaletteOpen(false); });
+
+  PAPERS.forEach((p, i) => {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "swatch";
     b.dataset.hex = p.hex;
     b.style.setProperty("--c", p.hex);
+    b.style.setProperty("--i", i);
     b.setAttribute("role", "radio");
     b.setAttribute("aria-label", p.name);
     b.title = p.name;
-    b.addEventListener("click", () => setPaper(p.hex));
+    b.addEventListener("click", () => {
+      setPaper(p.hex);
+      if (!canHover.matches) setTimeout(() => setPaletteOpen(false), 180);
+    });
     swatchBox.appendChild(b);
   });
   swatchBox.addEventListener("keydown", (e) => {
@@ -589,12 +608,11 @@
     setPaper(next.hex);
     swatchBox.querySelector(`[data-hex="${next.hex}"]`).focus();
   });
-  customInput.addEventListener("input", () => setPaper(customInput.value));
 
   let paperColor = PAPERS[0].hex;
   try {
     const saved = localStorage.getItem("fixify-paper");
-    if (saved && /^#[0-9a-f]{6}$/i.test(saved)) paperColor = saved.toLowerCase();
+    if (PAPERS.some((p) => p.hex === saved)) paperColor = saved;
   } catch (e) { /* storage blocked */ }
 
   layout();
