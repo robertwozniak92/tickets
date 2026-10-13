@@ -51,6 +51,17 @@
   // ---------- State ----------
   const stage = document.getElementById("stage");
   const hint = document.getElementById("hint");
+  const PAPERS = [
+    { name: "Blue", hex: "#9bcfe0" },   // the colour from the Figma design
+    { name: "Pink", hex: "#f4b6c9" },
+    { name: "Yellow", hex: "#f3e08a" },
+    { name: "Mint", hex: "#a8e0c0" },
+    { name: "Orange", hex: "#f6b783" },
+    { name: "Lilac", hex: "#c8b8ec" },
+    { name: "White", hex: "#ecebe6" },
+  ];
+  const swatchBox = document.getElementById("swatches");
+  const customInput = document.getElementById("custom-color");
   const counts = {
     new: document.getElementById("count-open"),
     working: document.getElementById("count-working"),
@@ -80,6 +91,7 @@
     const el = document.createElement("div");
     el.className = "ticket";
     el.dataset.status = "new";
+    applyPaper(el, paperColor);
     el.innerHTML = `
       <div class="paper">
         <svg width="281" height="646" viewBox="0 0 281 646" aria-hidden="true">
@@ -527,8 +539,67 @@
 
   function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
 
+  // ---------- Paper colour ----------
+  function inkFor(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const L = 0.2126 * lin(n >> 16) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+    return L < 0.22 ? "#fff" : "#000";
+  }
+
+  function applyPaper(el, hex) {
+    el.style.setProperty("--paper", hex);
+    el.style.setProperty("--ink", inkFor(hex));
+  }
+
+  function setPaper(hex, save = true) {
+    paperColor = hex.toLowerCase();
+    // Only tickets still in the machine change; torn-off ones keep their colour.
+    strip.tickets.forEach((t) => applyPaper(t.el, paperColor));
+    document.documentElement.style.setProperty("--paper", paperColor);
+    const preset = PAPERS.some((p) => p.hex === paperColor);
+    swatchBox.querySelectorAll(".swatch").forEach((b) => {
+      b.setAttribute("aria-checked", String(b.dataset.hex === paperColor));
+      b.tabIndex = b.dataset.hex === paperColor || (!preset && b === swatchBox.firstChild) ? 0 : -1;
+    });
+    customInput.parentElement.classList.toggle("is-selected", !preset);
+    customInput.parentElement.style.setProperty("--c", paperColor);
+    if (!preset) customInput.value = paperColor;
+    if (save) { try { localStorage.setItem("fixify-paper", paperColor); } catch (e) { /* storage blocked */ } }
+  }
+
+  PAPERS.forEach((p) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "swatch";
+    b.dataset.hex = p.hex;
+    b.style.setProperty("--c", p.hex);
+    b.setAttribute("role", "radio");
+    b.setAttribute("aria-label", p.name);
+    b.title = p.name;
+    b.addEventListener("click", () => setPaper(p.hex));
+    swatchBox.appendChild(b);
+  });
+  swatchBox.addEventListener("keydown", (e) => {
+    const dir = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!dir) return;
+    e.preventDefault();
+    const i = PAPERS.findIndex((p) => p.hex === paperColor);
+    const next = PAPERS[(Math.max(0, i) + dir + PAPERS.length) % PAPERS.length];
+    setPaper(next.hex);
+    swatchBox.querySelector(`[data-hex="${next.hex}"]`).focus();
+  });
+  customInput.addEventListener("input", () => setPaper(customInput.value));
+
+  let paperColor = PAPERS[0].hex;
+  try {
+    const saved = localStorage.getItem("fixify-paper");
+    if (saved && /^#[0-9a-f]{6}$/i.test(saved)) paperColor = saved.toLowerCase();
+  } catch (e) { /* storage blocked */ }
+
   layout();
   fillStrip();
+  setPaper(paperColor, false);
   strip.y = view.rest - 120 * view.s; // feed in from the slot on load
   strip.v = 0;
   requestAnimationFrame(frame);

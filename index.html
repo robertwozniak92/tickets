@@ -13,6 +13,14 @@
   <div class="slot" aria-hidden="true"></div>
   <main id="stage" aria-label="IT ticket dispenser. Pull the hanging ticket down to tear one off."></main>
 
+  <div class="palette" role="radiogroup" aria-label="Ticket paper color">
+    <span class="palette-label" aria-hidden="true">Paper</span>
+    <div id="swatches" class="swatches"></div>
+    <label class="swatch swatch-custom" title="Custom color">
+      <input id="custom-color" type="color" value="#9bcfe0" aria-label="Custom paper color" />
+    </label>
+  </div>
+
   <p id="hint" class="hint" aria-live="polite">Pull a ticket</p>
 
   <footer class="hud" aria-live="polite">
