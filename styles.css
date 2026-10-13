@@ -83,7 +83,9 @@ html, body {
 
 .paper .fill { fill: var(--paper); transition: fill 0.35s ease; }
 .paper .mark { fill: var(--ink); }
-.paper .cut { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+/* Perforation between joined tickets: faint, and gone once a ticket is torn off */
+.paper .cut { fill: none; stroke: var(--ink); stroke-width: 1; stroke-opacity: 0.22; }
+.ticket.is-free .cut { display: none; }
 
 .rail {
   position: absolute;
