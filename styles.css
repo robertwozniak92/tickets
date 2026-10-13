@@ -41,15 +41,20 @@ html, body {
   color: var(--ink);
 }
 
-.ticket.is-free {
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.28));
+/* Every ticket gets a hairline edge so same-colour paper never merges.
+   The strip hangs above the desk, so it casts a clear shadow; tickets lying
+   on the desk sit lower; the one in your hand is lifted highest. */
+.ticket {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5)) drop-shadow(0 16px 22px rgba(0, 0, 0, 0.5));
   transition: filter 0.25s ease;
 }
 
-/* The ticket in your hand is lifted, so it casts a deeper shadow */
+.ticket.is-free {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.38));
+}
+
 .ticket.is-held {
-  filter: drop-shadow(0 22px 24px rgba(0, 0, 0, 0.6)) drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35));
-  transition: filter 0.25s ease;
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5)) drop-shadow(0 26px 28px rgba(0, 0, 0, 0.6)) drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35));
 }
 
 .paper {
@@ -216,7 +221,9 @@ html, body {
 }
 
 .palette.is-open {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(14, 18, 18, 0.92);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
@@ -276,17 +283,6 @@ html, body {
   width: 26px;
   height: 26px;
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px rgba(255, 255, 255, 0.25), inset 0 -2px 0 rgba(0, 0, 0, 0.18);
-}
-
-@media (max-width: 520px) {
-  .palette {
-    top: auto;
-    right: auto;
-    left: 50%;
-    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 30px);
-    transform: translate3d(-50%, 0, 0);
-  }
-  body .hint { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 76px); }
 }
 
 /* Finger-sized targets on touch screens */
