@@ -583,6 +583,13 @@
   let closeTimer = 0;
   function setPaletteOpen(open) {
     clearTimeout(closeTimer);
+    if (open) {
+      // Animate to the real content size so closing starts moving immediately.
+      // (layout offsets ignore the swatches' tucked-away transforms)
+      const first = swatchBox.firstElementChild, last = swatchBox.lastElementChild;
+      swatchBox.style.setProperty("--full-w", last.offsetLeft + last.offsetWidth - first.offsetLeft + "px");
+      swatchBox.style.setProperty("--full-h", last.offsetTop + last.offsetHeight - first.offsetTop + "px");
+    }
     palette.classList.toggle("is-open", open);
     paletteToggle.setAttribute("aria-expanded", String(open));
   }

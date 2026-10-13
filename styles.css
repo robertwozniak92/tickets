@@ -227,10 +227,12 @@ html, body {
   transform: translateZ(0);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
+  /* on close, the backing fades only after the swatches have tucked in */
+  transition: background 0.2s ease 0.18s, box-shadow 0.2s ease 0.18s;
 }
 
 .palette.is-open {
+  transition-delay: 0s;
   background: rgba(14, 18, 18, 0.92);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
@@ -247,7 +249,7 @@ html, body {
 }
 
 .palette.is-open .swatches {
-  max-width: 260px;
+  max-width: calc(var(--full-w, 246px) + 14px);
   padding: 4px 10px 4px 4px;
 }
 
@@ -268,12 +270,14 @@ html, body {
 .swatches .swatch {
   opacity: 0;
   transform: translateX(calc((7 - var(--i)) * 12px)) scale(0.4);
-  transition: opacity 0.2s ease, transform 0.3s cubic-bezier(.2, 1.4, .4, 1), box-shadow 0.15s ease;
+  transition: opacity 0.18s ease, transform 0.25s ease, box-shadow 0.15s ease;
+  transition-delay: calc(var(--i) * 18ms);
 }
 
 .palette.is-open .swatches .swatch {
   opacity: 1;
   transform: none;
+  transition: opacity 0.2s ease, transform 0.3s cubic-bezier(.2, 1.4, .4, 1), box-shadow 0.15s ease;
   transition-delay: calc((7 - var(--i)) * 25ms);
 }
 
@@ -298,7 +302,6 @@ html, body {
 /* Finger-sized targets on touch screens */
 @media (pointer: coarse) {
   .swatches { gap: 10px; }
-  .palette.is-open .swatches { max-width: 340px; }
   .swatch { width: 30px; height: 30px; }
   .palette-toggle { width: 36px; height: 36px; }
   .swatch::before {
@@ -321,10 +324,13 @@ html, body {
   }
   .palette.is-open .swatches {
     max-width: none;
-    max-height: 420px;
+    max-height: calc(var(--full-h, 280px) + 14px);
     padding: 10px 4px 4px;
   }
-  .swatches .swatch { transform: translateY(calc((var(--i) + 1) * -12px)) scale(0.4); }
+  .swatches .swatch {
+    transform: translateY(calc((var(--i) + 1) * -12px)) scale(0.4);
+    transition-delay: calc((6 - var(--i)) * 18ms);
+  }
   .palette.is-open .swatches .swatch { transition-delay: calc(var(--i) * 25ms); }
 }
 
