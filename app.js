@@ -50,6 +50,11 @@
 
   // ---------- State ----------
   const stage = document.getElementById("stage");
+  // Tickets still joined in the machine live in one layer so the strip casts a
+  // single shadow (per-ticket shadows would bleed into each perforated notch).
+  const stripLayer = document.createElement("div");
+  stripLayer.className = "strip-layer";
+  stage.appendChild(stripLayer);
   const hint = document.getElementById("hint");
   const PAPERS = [
     { name: "Blue", hex: "#9bcfe0" },   // the colour from the Figma design
@@ -155,11 +160,17 @@
     view.rest = view.H * 0.49 - 645 * view.s;
     stage.style.perspective = `${Math.round(Math.max(view.W, view.H) * 1.1)}px`;
     stage.style.perspectiveOrigin = "50% 0%";
+    stripLayer.style.perspective = stage.style.perspective;
+    stripLayer.style.perspectiveOrigin = "50% 0%";
     document.documentElement.style.setProperty("--s", view.s.toFixed(4));
   }
 
   function fillStrip() {
-    while (strip.tickets.length < 4) strip.tickets.push(createTicket());
+    while (strip.tickets.length < 4) {
+      const t = createTicket();
+      stripLayer.appendChild(t.el);
+      strip.tickets.push(t);
+    }
     refreshStripClasses();
   }
 
@@ -227,6 +238,7 @@
   function tear() {
     const s = view.s;
     const t = strip.tickets.shift();
+    stage.appendChild(t.el); // leaves the strip layer and becomes its own sheet
     strip.drag = null;
 
     // Hand the bottom ticket over to free-body physics without a visual jump.
